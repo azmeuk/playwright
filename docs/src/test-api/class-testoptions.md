@@ -648,6 +648,9 @@ export default defineConfig({
       - `level` ?<[TestAnnotationLevel]<"file"|"test"|"step">> Level of the detail to include about the current test.
       - `position` ?<[AnnotatePosition]<"top-left"|"top"|"top-right"|"bottom-left"|"bottom"|"bottom-right">> Position of the test information overlay. Defaults to `"top-left"`.
       - `fontSize` ?<[int]> Font size of the test information in pixels. Defaults to `14`.
+  - `quality` ?<[Object]> Encoding quality. When omitted, the tuned VP8 defaults are used.
+    - `mode` <[VideoQualityMode]<"crf"|"bitrate">> `"crf"` for constant rate factor (constant visual quality, variable file size). `"bitrate"` for a target bitrate (variable visual quality, predictable file size).
+    - `value` <[int]> For `"crf"`, an integer between `0` (lossless) and `63` (worst). For `"bitrate"`, the target bitrate in bits per second (e.g. `1_000_000` for 1 Mbit/s).
 
 Whether to record video for each test. Defaults to `'off'`.
 * `'off'`: Do not record video.

@@ -25,14 +25,17 @@ const ffmpeg = registry.registry.findExecutable('ffmpeg')!.executablePath();
 export class VideoPlayer {
   videoWidth: number;
   videoHeight: number;
+  codec: string;
 
   constructor(fileName: string) {
     const output = spawnSync(ffmpeg, ['-i', fileName, '-r', '25', `${fileName}-%03d.png`]).stderr.toString();
     const lines = output.split('\n');
     const streamLine = lines.find(l => l.trim().startsWith('Stream #0:0'));
     const resolutionMatch = streamLine!.match(/, (\d+)x(\d+),/);
+    const codecMatch = streamLine!.match(/Video:\s*([\w-]+)/);
     this.videoWidth = parseInt(resolutionMatch![1], 10);
     this.videoHeight = parseInt(resolutionMatch![2], 10);
+    this.codec = codecMatch ? codecMatch[1] : '';
   }
 }
 
@@ -548,6 +551,34 @@ test('should work with video size', async ({ runInlineTest }) => {
   const folder = test.info().outputPath(`test-results/a-pass-chromium/`);
   const [file] = fs.readdirSync(folder);
   const videoPlayer = new VideoPlayer(path.join(folder, file));
+  expect(videoPlayer.videoWidth).toBe(220);
+  expect(videoPlayer.videoHeight).toBe(110);
+});
+
+test('should work with video quality', async ({ runInlineTest }) => {
+  const result = await runInlineTest({
+    'playwright.config.js': `
+      module.exports = {
+        use: { video: { mode: 'on', size: { width: 220, height: 110 }, quality: { mode: 'crf', value: 50 } } },
+        name: 'chromium',
+        preserveOutput: 'always',
+      };
+    `,
+    'a.test.ts': `
+      import { test, expect } from '@playwright/test';
+      test('pass', async ({ page }) => {
+        await page.setContent('<div>PASS</div>');
+        await page.waitForTimeout(2000);
+        test.expect(1 + 1).toBe(2);
+      });
+    `,
+  }, { workers: 1 });
+  expect(result.exitCode).toBe(0);
+  expect(result.passed).toBe(1);
+  const folder = test.info().outputPath(`test-results/a-pass-chromium/`);
+  const [file] = fs.readdirSync(folder);
+  const videoPlayer = new VideoPlayer(path.join(folder, file));
+  expect(videoPlayer.codec).toBe('vp8');
   expect(videoPlayer.videoWidth).toBe(220);
   expect(videoPlayer.videoHeight).toBe(110);
 });

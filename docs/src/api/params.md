@@ -827,6 +827,9 @@ When set to `minimal`, only record information necessary for routing from HAR. T
     - `duration` ?<[float]> How long each annotation is displayed in milliseconds. Defaults to `500`.
     - `position` ?<[AnnotatePosition]<"top-left"|"top"|"top-right"|"bottom-left"|"bottom"|"bottom-right">> Position of the action title overlay. Defaults to `"top-right"`.
     - `fontSize` ?<[int]> Font size of the action title in pixels. Defaults to `24`.
+  - `quality` ?<[Object]> Encoding quality. When omitted, the tuned VP8 defaults are used.
+    - `mode` <[VideoQualityMode]<"crf"|"bitrate">> `"crf"` for constant rate factor (constant visual quality, variable file size). `"bitrate"` for a target bitrate (variable visual quality, predictable file size).
+    - `value` <[int]> For `"crf"`, an integer between `0` (lossless) and `63` (worst). For `"bitrate"`, the target bitrate in bits per second (e.g. `1_000_000` for 1 Mbit/s).
 
 Enables video recording for all pages into `recordVideo.dir` directory. If not specified videos are not recorded. Make
 sure to await [`method: BrowserContext.close`] for videos to be saved.
@@ -850,6 +853,16 @@ not recorded. Make sure to call [`method: BrowserContext.close`] for videos to b
 Dimensions of the recorded videos. If not specified the size will be equal to `viewport`
 scaled down to fit into 800x800. If `viewport` is not configured explicitly the video size defaults to 800x450.
 Actual picture of each page will be scaled down if necessary to fit the specified size.
+
+## context-option-recordvideo-quality
+* langs: csharp, java, python
+  - alias-python: record_video_quality
+- `recordVideoQuality` <[Object]>
+  * alias-java: RecordVideoQuality
+  - `mode` <[VideoQualityMode]<"crf"|"bitrate">> `"crf"` for constant rate factor (constant visual quality, variable file size). `"bitrate"` for a target bitrate (variable visual quality, predictable file size).
+  - `value` <[int]> For `"crf"`, an integer between `0` (lossless) and `63` (worst). For `"bitrate"`, the target bitrate in bits per second (e.g. `1_000_000` for 1 Mbit/s).
+
+Encoding quality. When omitted, the tuned VP8 defaults are used.
 
 ## context-option-proxy
 - `proxy` <[Object]>
@@ -1075,6 +1088,7 @@ between the same pixel in compared images, between zero (strict) and one (lax), 
 - %%-context-option-recordvideo-%%
 - %%-context-option-recordvideo-dir-%%
 - %%-context-option-recordvideo-size-%%
+- %%-context-option-recordvideo-quality-%%
 - %%-context-option-strict-%%
 - %%-context-option-service-worker-policy-%%
 

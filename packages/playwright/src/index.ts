@@ -408,12 +408,13 @@ const playwrightFixtures: Fixtures<TestFixtures, WorkerFixtures, UtilityTestFixt
           `If you would like to configure your page before each test, do that in beforeEach hook instead.`,
         ].join('\n'));
       }
-      const show = typeof video === 'string' ? undefined : video.show;
+      const videoObject = typeof video === 'string' ? undefined : video;
       const videoOptions: BrowserContextOptions = captureVideo ? {
         recordVideo: {
           dir: tracing().artifactsDir(),
-          size: typeof video === 'string' ? undefined : video.size,
-          showActions: show?.actions,
+          size: videoObject?.size,
+          showActions: videoObject?.show?.actions,
+          quality: videoObject?.quality,
         }
       } : {};
       const context = await browser.newContext({ ...videoOptions, ...options }) as BrowserContextImpl;

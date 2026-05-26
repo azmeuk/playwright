@@ -197,6 +197,15 @@ ContextOptions:
           type: object?
           properties:
             $mixin: ShowActionsOptions
+        quality:
+          type: object?
+          properties:
+            mode:
+              type: enum
+              literals:
+              - crf
+              - bitrate
+            value: int
     strictSelectors: boolean?
     serviceWorkers:
       type: enum?

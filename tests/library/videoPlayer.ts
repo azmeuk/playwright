@@ -26,6 +26,7 @@ export class VideoPlayer {
   frames: number;
   videoWidth: number;
   videoHeight: number;
+  codec: string;
   cache = new Map<number, any>();
 
   constructor(fileName: string) {
@@ -43,11 +44,13 @@ export class VideoPlayer {
     const framesMatch = framesLine.match(/frame=\s+(\d+)/);
     const streamLine = lines.find(l => l.trim().startsWith('Stream #0:0'));
     const resolutionMatch = streamLine.match(/, (\d+)x(\d+),/);
+    const codecMatch = streamLine.match(/Video:\s*([\w-]+)/);
     const durationMatch = lines.find(l => l.trim().startsWith('Duration'))!.match(/Duration: (\d+):(\d\d):(\d\d.\d\d)/);
     this.duration = (((parseInt(durationMatch![1], 10) * 60) + parseInt(durationMatch![2], 10)) * 60 + parseFloat(durationMatch![3])) * 1000;
     this.frames = parseInt(framesMatch![1], 10);
     this.videoWidth = parseInt(resolutionMatch![1], 10);
     this.videoHeight = parseInt(resolutionMatch![2], 10);
+    this.codec = codecMatch ? codecMatch[1] : '';
   }
 
   findFrame(framePredicate: (pixels: Buffer) => boolean, offset?: { x: number, y: number }): any |undefined {

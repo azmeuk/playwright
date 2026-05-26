@@ -43,7 +43,11 @@ export class VideoRecorder {
     this._screencast = screencast;
   }
 
-  start(options: { fileName?: string, size?: { width: number, height: number } }) {
+  start(options: {
+    fileName?: string,
+    size?: { width: number, height: number },
+    quality?: { mode: 'crf' | 'bitrate', value: number },
+  }) {
     assert(!this._artifact);
     // Do this first, it likes to throw.
     const ffmpegPath = registry.findExecutable('ffmpeg')!.executablePathOrDie(this._screencast.page.browserContext._browser.sdkLanguage());
@@ -59,7 +63,7 @@ export class VideoRecorder {
     const { size } = this._screencast.addClient(this._client);
     // For video files only, prioritize encoding into the given size, regardless of the actual pixel data.
     const videoSize = options.size ?? size;
-    this._videoRecorder = new FfmpegVideoRecorder(ffmpegPath, videoSize, outputFile);
+    this._videoRecorder = new FfmpegVideoRecorder(ffmpegPath, videoSize, outputFile, { quality: options.quality });
     this._artifact = new Artifact(this._screencast.page.browserContext, outputFile);
     return this._artifact;
   }
@@ -91,9 +95,15 @@ export function startAutomaticVideoRecording(page: Page) {
   if (page.browserContext._options.recordVideo?.showActions)
     page.screencast.showActions(page.browserContext._options.recordVideo?.showActions);
   const dir = recordVideo.dir ?? page.browserContext._browser.options.artifactsDir;
-  const artifact = recorder.start({ size: recordVideo.size, fileName: path.join(dir, page.guid + '.webm') });
+  const artifact = recorder.start({
+    size: recordVideo.size,
+    fileName: path.join(dir, page.guid + '.webm'),
+    quality: recordVideo.quality,
+  });
   page.video = artifact;
 }
+
+type QualityOption = { mode: 'crf' | 'bitrate', value: number };
 
 class FfmpegVideoRecorder {
   private _size: types.Size;
@@ -108,13 +118,15 @@ class FfmpegVideoRecorder {
   private _ffmpegPath: string;
   private _launchPromise: Promise<Error | null>;
   private _outputFile: string;
+  private _quality: QualityOption | undefined;
 
-  constructor(ffmpegPath: string, size: types.Size, outputFile: string) {
+  constructor(ffmpegPath: string, size: types.Size, outputFile: string, options: { quality?: QualityOption } = {}) {
     if (!outputFile.endsWith('.webm'))
       throw new Error('File must have .webm extension');
     this._outputFile = outputFile;
     this._ffmpegPath = ffmpegPath;
     this._size = size;
+    this._quality = options.quality;
     this._launchPromise = this._launch().catch(e => e);
   }
 
@@ -133,12 +145,12 @@ class FfmpegVideoRecorder {
     // How to stress-test video recording (runs 10 recorders in parallel to book all cpus available):
     //   $ node ./utils/video_stress.js
     //
-    // We use the following vp8 options:
+    // Default vp8 options applied when quality is not set:
     //   "-qmin 0 -qmax 50" - quality variation from 0 to 50.
     //     Suggested here: https://trac.ffmpeg.org/wiki/Encode/VP8
     //   "-crf 8" - constant quality mode, 4-63, lower means better quality.
     //   "-deadline realtime -speed 8" - do not use too much cpu to keep up with incoming frames.
-    //   "-b:v 1M" - video bitrate. Default value is too low for vp8
+    //   "-b:v 1M" - video bitrate. Default value is too low for vp8.
     //     Suggested here: https://trac.ffmpeg.org/wiki/Encode/VP8
     //   Note that we can switch to "-qmin 20 -qmax 50 -crf 30" for smaller video size but worse quality.
     //
@@ -159,9 +171,7 @@ class FfmpegVideoRecorder {
     // "-threads 1" means using one thread. This drastically reduces stalling when
     //   cpu is overbooked. By default vp8 tries to use all available threads?
 
-    const w = this._size.width;
-    const h = this._size.height;
-    const args = `-loglevel error -f image2pipe -avioflags direct -fpsprobesize 0 -probesize 32 -analyzeduration 0 -c:v mjpeg -i pipe:0 -y -an -r ${fps} -c:v vp8 -qmin 0 -qmax 50 -crf 8 -deadline realtime -speed 8 -b:v 1M -threads 1 -vf pad=${w}:${h}:0:0:gray,crop=${w}:${h}:0:0`.split(' ');
+    const args = buildFfmpegArgs(this._size, this._quality);
     args.push(this._outputFile);
 
     const { launchedProcess, gracefullyClose } = await launchProcess({
@@ -257,4 +267,22 @@ class FfmpegVideoRecorder {
 function createWhiteImage(width: number, height: number): Buffer {
   const data = Buffer.alloc(width * height * 4, 255);
   return jpegjs.encode({ data, width, height }, 80).data;
+}
+
+function buildFfmpegArgs(size: types.Size, quality: QualityOption | undefined): string[] {
+  const w = size.width;
+  const h = size.height;
+  // Keep the historical command line verbatim when no quality option is set.
+  if (!quality)
+    return `-loglevel error -f image2pipe -avioflags direct -fpsprobesize 0 -probesize 32 -analyzeduration 0 -c:v mjpeg -i pipe:0 -y -an -r ${fps} -c:v vp8 -qmin 0 -qmax 50 -crf 8 -deadline realtime -speed 8 -b:v 1M -threads 1 -vf pad=${w}:${h}:0:0:gray,crop=${w}:${h}:0:0`.split(' ');
+
+  const args = `-loglevel error -f image2pipe -avioflags direct -fpsprobesize 0 -probesize 32 -analyzeduration 0 -c:v mjpeg -i pipe:0 -y -an -r ${fps} -c:v vp8 -qmin 0 -qmax 50 -deadline realtime -speed 8`.split(' ');
+
+  if (quality.mode === 'crf')
+    args.push('-crf', String(quality.value), '-b:v', '1M');
+  else
+    args.push('-b:v', String(quality.value));
+
+  args.push('-threads', '1', '-vf', `pad=${w}:${h}:0:0:gray,crop=${w}:${h}:0:0`);
+  return args;
 }

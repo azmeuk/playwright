@@ -10499,6 +10499,23 @@ export interface Browser {
          */
         fontSize?: number;
       };
+
+      /**
+       * Encoding quality. When omitted, the tuned VP8 defaults are used.
+       */
+      quality?: {
+        /**
+         * `"crf"` for constant rate factor (constant visual quality, variable file size). `"bitrate"` for a target bitrate
+         * (variable visual quality, predictable file size).
+         */
+        mode: "crf"|"bitrate";
+
+        /**
+         * For `"crf"`, an integer between `0` (lossless) and `63` (worst). For `"bitrate"`, the target bitrate in bits per
+         * second (e.g. `1_000_000` for 1 Mbit/s).
+         */
+        value: number;
+      };
     };
 
     /**
@@ -15945,6 +15962,23 @@ export interface BrowserType<Unused = {}> {
          * Font size of the action title in pixels. Defaults to `24`.
          */
         fontSize?: number;
+      };
+
+      /**
+       * Encoding quality. When omitted, the tuned VP8 defaults are used.
+       */
+      quality?: {
+        /**
+         * `"crf"` for constant rate factor (constant visual quality, variable file size). `"bitrate"` for a target bitrate
+         * (variable visual quality, predictable file size).
+         */
+        mode: "crf"|"bitrate";
+
+        /**
+         * For `"crf"`, an integer between `0` (lossless) and `63` (worst). For `"bitrate"`, the target bitrate in bits per
+         * second (e.g. `1_000_000` for 1 Mbit/s).
+         */
+        value: number;
       };
     };
 
@@ -22517,6 +22551,23 @@ export interface Electron {
          */
         fontSize?: number;
       };
+
+      /**
+       * Encoding quality. When omitted, the tuned VP8 defaults are used.
+       */
+      quality?: {
+        /**
+         * `"crf"` for constant rate factor (constant visual quality, variable file size). `"bitrate"` for a target bitrate
+         * (variable visual quality, predictable file size).
+         */
+        mode: "crf"|"bitrate";
+
+        /**
+         * For `"crf"`, an integer between `0` (lossless) and `63` (worst). For `"bitrate"`, the target bitrate in bits per
+         * second (e.g. `1_000_000` for 1 Mbit/s).
+         */
+        value: number;
+      };
     };
 
     /**
@@ -23204,6 +23255,23 @@ export interface AndroidDevice {
          * Font size of the action title in pixels. Defaults to `24`.
          */
         fontSize?: number;
+      };
+
+      /**
+       * Encoding quality. When omitted, the tuned VP8 defaults are used.
+       */
+      quality?: {
+        /**
+         * `"crf"` for constant rate factor (constant visual quality, variable file size). `"bitrate"` for a target bitrate
+         * (variable visual quality, predictable file size).
+         */
+        mode: "crf"|"bitrate";
+
+        /**
+         * For `"crf"`, an integer between `0` (lossless) and `63` (worst). For `"bitrate"`, the target bitrate in bits per
+         * second (e.g. `1_000_000` for 1 Mbit/s).
+         */
+        value: number;
       };
     };
 
@@ -24384,6 +24452,23 @@ export interface BrowserContextOptions {
        * Font size of the action title in pixels. Defaults to `24`.
        */
       fontSize?: number;
+    };
+
+    /**
+     * Encoding quality. When omitted, the tuned VP8 defaults are used.
+     */
+    quality?: {
+      /**
+       * `"crf"` for constant rate factor (constant visual quality, variable file size). `"bitrate"` for a target bitrate
+       * (variable visual quality, predictable file size).
+       */
+      mode: "crf"|"bitrate";
+
+      /**
+       * For `"crf"`, an integer between `0` (lossless) and `63` (worst). For `"bitrate"`, the target bitrate in bits per
+       * second (e.g. `1_000_000` for 1 Mbit/s).
+       */
+      value: number;
     };
   };
 

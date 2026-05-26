@@ -410,7 +410,7 @@ export class PageDispatcher extends Dispatcher<Page, channels.PageChannel, Brows
     let artifact: Artifact | undefined;
     if (params.record) {
       this._videoRecorder = new VideoRecorder(this._page.screencast);
-      artifact = this._videoRecorder.start(params);
+      artifact = this._videoRecorder.start({ size: params.size });
     }
     return { artifact: artifact ? createVideoDispatcher(this.parentScope(), artifact) : undefined };
   }

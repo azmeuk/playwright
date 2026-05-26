@@ -781,3 +781,40 @@ it('should saveAs video', async ({ browser }, testInfo) => {
   await page.video().saveAs(saveAsPath);
   expect(fs.existsSync(saveAsPath)).toBeTruthy();
 });
+
+it.describe('recordVideo quality', () => {
+  it.slow();
+  it.skip(({ mode }) => mode !== 'default', 'video.path() is not available in remote mode');
+
+  it('should accept quality crf', async ({ browser, browserName }, testInfo) => {
+    const size = browserName === 'firefox' ? { width: 500, height: 400 } : { width: 320, height: 240 };
+    const context = await browser.newContext({
+      recordVideo: { dir: testInfo.outputPath(''), size, quality: { mode: 'crf', value: 50 } },
+      viewport: size,
+    });
+    const page = await context.newPage();
+    await ensureSomeFrames(page);
+    await context.close();
+    const videoFile = await page.video().path();
+    expect(fs.statSync(videoFile).size).toBeGreaterThan(0);
+    const videoPlayer = new VideoPlayer(videoFile);
+    expect(videoPlayer.codec).toBe('vp8');
+    expect(videoPlayer.videoWidth).toBe(size.width);
+    expect(videoPlayer.videoHeight).toBe(size.height);
+  });
+
+  it('should accept quality bitrate', async ({ browser, browserName }, testInfo) => {
+    const size = browserName === 'firefox' ? { width: 500, height: 400 } : { width: 320, height: 240 };
+    const context = await browser.newContext({
+      recordVideo: { dir: testInfo.outputPath(''), size, quality: { mode: 'bitrate', value: 200_000 } },
+      viewport: size,
+    });
+    const page = await context.newPage();
+    await ensureSomeFrames(page);
+    await context.close();
+    const videoFile = await page.video().path();
+    expect(fs.statSync(videoFile).size).toBeGreaterThan(0);
+    const videoPlayer = new VideoPlayer(videoFile);
+    expect(videoPlayer.codec).toBe('vp8');
+  });
+});
